@@ -22,7 +22,6 @@
 //-10 <= nums[i] <= 10
 //All the integers of nums are unique.
 #include "vector"
-#include "iostream"
 #include "algorithm"
 
 using namespace std;
@@ -54,5 +53,34 @@ public:
         } while (loop);
 
         return res;
+    }
+};
+
+// Backtracking
+class BtSolution {
+private:
+    vector<vector<int>> res;
+public:
+
+    vector<vector<int>> permute(vector<int> &nums) {
+        gen(nums.size(), nums);
+        return res;
+    }
+
+    void gen(int size, vector<int> &nums) {
+        if (size == 0) res.push_back(nums);
+        else {
+            for (int i = 0; i < size; ++i) {
+                swap(nums, i, size - 1);
+                gen(size - 1, nums);
+                swap(nums, i, size - 1);
+            }
+        }
+    }
+
+    void swap(vector<int> &nums, int x, int y) {
+        int temp = nums[x];
+        nums[x] = nums[y];
+        nums[y] = temp;
     }
 };
