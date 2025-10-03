@@ -2,63 +2,90 @@
 #include "lib/stdc++.h"
 using namespace std;
 
-const auto _ = std::cin.tie(nullptr)->sync_with_stdio(false);
-
-typedef vector<vector<int>> vvi;
-
-class Comparison {
- public:
-  bool operator()(const array<int, 3>& lhs, const array<int, 3>& rhs) const {
-    return lhs[2] > rhs[2];
-  }
+struct TreeNode {
+  int val;
+  TreeNode* left;
+  TreeNode* right;
+  TreeNode() : val(0), left(nullptr), right(nullptr) {}
+  TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+  TreeNode(int x, TreeNode* left, TreeNode* right)
+      : val(x), left(left), right(right) {}
 };
 
-typedef priority_queue<array<int, 3>, vector<array<int, 3>>, Comparison> pq;
-
 class Solution {
- private:
-  vvi directions{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
 
  public:
   int trapRainWater(vector<vector<int>>& heightMap) {
-    const int rowSize = heightMap.size();
-    const int colSize = heightMap[0].size();
-    if (rowSize <= 2 || colSize <= 2) return 0;
-    Comparison comp;
-    pq myQueue(comp);
-    int* visited = (int*)calloc(rowSize * colSize, sizeof(int));
-    for (int i = 0; i < rowSize; ++i) {
-      myQueue.push({i, 0, heightMap[i][0]});
-      visited[i * colSize] = 1;
-      myQueue.push({i, colSize - 1, heightMap[i][colSize - 1]});
-      visited[i * colSize + colSize - 1] = 1;
+    int x = heightMap.size();
+    int y = heightMap[0].size();
+    vector<vector<bool>> visited(x, vector<bool>(y, false));
+    vector<pair<int, int>> direction{{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+    auto comp = [&heightMap](pair<int, int>& a, pair<int, int>& b) {
+      return heightMap[a.first][a.second] > heightMap[b.first][b.second];
+    };
+
+    priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(comp)> pq(
+        comp);
+
+    for (int i = 0; i < x; ++i) {
+      pq.push({i, 0});
+      visited[i][0] = true;
+      if (y > 1) {
+        pq.push({i, y - 1});
+        visited[i][y - 1] = true;
+      }
     }
-    for (int j = 1; j < colSize - 1; ++j) {
-      myQueue.push({0, j, heightMap[0][j]});
-      visited[j] = 1;
-      myQueue.push({rowSize - 1, j, heightMap[rowSize - 1][j]});
-      visited[(rowSize - 1) * colSize + j] = 1;
+    for (int j = 1; j < y - 1; ++j) {
+      pq.push({0, j});
+      visited[0][j] = true;
+      if (x > 1) {
+        pq.push({x - 1, j});
+        visited[x - 1][j] = true;
+      }
     }
+
     int res = 0;
-    while (myQueue.size() > 0) {
-      auto lowest = myQueue.top();
-      myQueue.pop();
-      // bfs(heightMap, lowest, res, visited, myQueue, colSize, rowSize);
-      for (int i = 0; i < 4; ++i) {
-        int x = lowest[0] + directions[i][0];
-        int y = lowest[1] + directions[i][1];
-        if (x >= 0 && x < rowSize && y >= 0 && y < colSize) {
-          if (visited[x * colSize + y] == 1) continue;
-          visited[x * colSize + y] = 1;
-          if (heightMap[x][y] <= lowest[2]) {
-            res += lowest[2] - heightMap[x][y];
-            myQueue.push({x, y, lowest[2]});
-          } else {
-            myQueue.push({x, y, heightMap[x][y]});
+
+    while (pq.size() > 0) {
+      auto top = pq.top();
+      pq.pop();
+      vector<pair<int, int>> l;
+      l.push_back(top);
+      while (l.size() > 0) {
+        auto back = l.back();
+        l.pop_back();
+        res += heightMap[top.first][top.second] -
+        heightMap[back.first][back.second];
+        for (auto& dir : direction) {
+          int newX = back.first + dir.first;
+          int newY = back.second + dir.second;
+          if (newX >= 0 && newX < x && newY >= 0 && newY < y &&
+              !visited[newX][newY]) {
+            visited[newX][newY] = true;
+            if (heightMap[newX][newY] <= heightMap[top.first][top.second]) {
+              l.push_back({newX, newY});
+            } else {
+              pq.push({newX, newY});
+            }
           }
         }
       }
     }
+
     return res;
   }
 };
+
+int main() {
+  vector<vector<int>> v {
+    {1,3,3,1,3,2},
+    {3,2,1,3,2,3},
+    {3,3,3,2,3,1}
+  };
+  Solution s;
+  s.trapRainWater(v);
+  return 0;
+}
+
+// 2 10 11 11
